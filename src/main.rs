@@ -1,4 +1,4 @@
-use std::{fmt::{self, Display, Formatter}, iter::Enumerate, process::exit};
+use std::{fmt::{self, Display, Formatter}, process::exit};
 
 #[derive(Clone, Debug)]
 struct Function {
@@ -41,9 +41,6 @@ impl Function {
             vals.push(g.vals[self.vals[i]]);
         }
         Function { tgt: g.tgt, vals }
-    }
-    fn run(&self, x: usize) -> usize {
-        self.vals[x]
     }
     fn from_vec(tgt: usize, vals: Vec<usize>) -> Function {
         assert!(vals.iter().all(|&x| x < tgt));
@@ -154,14 +151,14 @@ impl<'a> Dinatural<'a> {
     }
 }
 
-fn dinaturals_for_squares<'a>(n: usize, f: &'a CommutativeSquare, g: &'a CommutativeSquare) -> Vec<Dinatural<'a>> {
+fn dinaturals_for_squares<'a>(n: usize, p: &'a CommutativeSquare, q: &'a CommutativeSquare) -> Vec<Dinatural<'a>> {
     let mut dinaturals = Vec::new();
+    // temporary hack: force the actual dinatural to be the same function
+    // for both the top side of the hexagon and the bottom side
     for e1 in Function::functions(n, n) {
-        for e2 in Function::functions(n, n) {
-            match Dinatural::new([e1.clone(), e2.clone()], f, g) {
-                Some(d) => dinaturals.push(d),
-                None => {}
-            }
+        match Dinatural::new([e1.clone(), e1.clone()], p, q) {
+            Some(d) => dinaturals.push(d),
+            None => {}
         }
     }
     dinaturals
@@ -189,6 +186,7 @@ fn main() {
     println!("dinaturals, total: {}", all_squares.len()*all_squares.len()*n.pow(n.try_into().unwrap())*n.pow(n.try_into().unwrap()));
     println!("dinaturals; comm.: {}", dinaturals.len());
 
+    // sanity check that composition is in the right direction
     println!("Comp: {}", chain(&vec![&Function::from_vec(3, vec![0, 1, 1]), &Function::from_vec(3, vec![1, 0, 2])]));
 
     // find two dinaturals for which the dinaturality condition is not satisfied
@@ -212,7 +210,7 @@ fn main() {
                             println!("{}", chain(&d1.hexagon_up_other(&d2)));
                             println!("Hexagon down\n------------------");
                             println!("{}", chain(&d1.hexagon_down_other(&d2)));
-                            exit(0)
+                            exit(1)
                         }
                     }
                 }
